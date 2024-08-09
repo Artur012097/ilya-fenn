@@ -1,0 +1,27 @@
+{
+  "name": "artbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bot.js",
+  "scripts": {
+    "dev": "nodemon bot.js",
+    "start": "babel-node bot --presets=env",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ngrok/ngrok": "^1.2.0",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ngrok": "^5.0.0-beta.2",
+    "node-telegram-bot-api": "^0.65.1",
+    "nodemon": "^3.1.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.1"
+  }
+}

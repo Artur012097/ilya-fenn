@@ -1,0 +1,266 @@
+* {
+  font-family: "Manrope", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+button {
+  cursor: pointer;
+}
+
+.f-wrapper.vb:after {
+  display: none;
+}
+
+.f-spinner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(255, 255, 255, 0.6);
+  z-index: 3;
+}
+
+.f-spinner > svg {
+  animation: size 1.5s infinite linear;
+  overflow: visible;
+  transform: scale(1);
+  width: 40px;
+}
+
+.f-spinner__fill {
+  animation: drop-shadow-blink 1.5s infinite linear;
+  fill: white;
+  filter: drop-shadow(0 0 2px blue);
+}
+
+.f-spinner__fill--animated {
+  animation: fill-blink 1.5s infinite linear;
+  fill: blue;
+}
+
+.f-spinner__inner-shadow {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 2px;
+  filter: drop-shadow(0 0 1px blue);
+}
+
+.f-regular {
+  font-family: "Manrope", sans-serif;
+  font-weight: 400;
+}
+
+.f-medium {
+  font-family: "Manrope", sans-serif;
+  font-weight: 500;
+}
+
+.f-semi {
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+}
+
+.f-bold {
+  font-family: "Manrope", sans-serif;
+  font-weight: 700;
+}
+
+.r-collected.roulette {
+  position: relative;
+  justify-content: flex-start;
+  padding-left: 24px;
+  transform: translate(0);
+  transform-style: preserve-3d;
+  background-color: #ffffff;
+}
+
+.r-collected.roulette:before {
+  content:"";
+  position: absolute;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  transform: translate3d(0px, 0px, -1px);
+  top: -4px;
+  left: -4px;
+  border-radius: inherit;
+  background: rgb(0,0,0);
+  background: linear-gradient(39deg, rgba(0,0,0,1) 0%, rgba(255,223,91,1) 22%, rgba(0,0,0,1) 100%);
+}
+
+@keyframes fill-blink {
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  75% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes drop-shadow-blink {
+  0%,
+  90%,
+  100% {
+    filter: drop-shadow(0 0 6px rgb(104, 104, 255));
+  }
+
+  75% {
+    filter: drop-shadow(0 0 3px blue);
+  }
+}
+
+.remove {
+  animation: collect 0.4s ease forwards;
+}
+
+@keyframes collect {
+  0% {
+    transform: scale(1);
+    background-size: 80%;
+  }
+  50% {
+    transform: scale(1);
+    background-size: 95%;
+  }
+  100% {
+    transform: scale(0);
+    background-size: 0%;
+  }
+}
+
+.bonus-block:after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: url("/game/icons/coin_icon.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 80%;
+  -webkit-animation: bonusBlockAnimation 0.7s ease;
+  -o-animation: bonusBlockAnimation 0.7s ease;
+  animation: bonusBlockAnimation 0.7s ease;
+}
+
+@keyframes bonusBlockAnimation {
+  0% {
+    transform: scale(0);
+  }
+  25% {
+    transform: scale(2);
+  }
+  50% {
+    transform: scale(0.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.f-game-container.generate-bonus {
+  -webkit-animation: addBonusBg 0.7s ease;
+  -o-animation: addBonusBg 0.7s ease;
+  animation: addBonusBg 0.7s ease;
+}
+
+@keyframes addBonusBg {
+  0% {
+    background: rgba(240, 170, 0, 0);
+  }
+  25% {
+    background: rgba(240, 170, 0, 0.14);
+  }
+  50% {
+    background: rgba(240, 170, 0, 0.4);
+  }
+  100% {
+    background: rgba(240, 170, 0, 0);
+  }
+}
+
+.fennec__image {
+  position: relative;
+}
+
+.fennec__image.image-changed:after {
+  content: "";
+  width: 200px;
+  height: 200px;
+  position: absolute;
+  top: calc(50% - 100px);
+  left: -20px;
+  background: rgba(255, 255, 255, 1);
+  opacity: 0;
+  border-radius: 100%;
+  scale: 0;
+  filter: drop-shadow(0 0 0px #ffffff);
+  transition: 1.5s ease;
+  animation: imageChanged 1s ease;
+}
+
+@keyframes imageChanged {
+  0% {
+    opacity: 0;
+    scale: 0;
+    filter: drop-shadow(0 0 0px #ffffff) blur(5px);
+  }
+  50% {
+    opacity: 0.4;
+    scale: 1.1;
+    filter: drop-shadow(36px 19px 46px #ffffff) blur(30px);
+  }
+  100% {
+    opacity: 0;
+    scale: 0;
+    filter: drop-shadow(0 0 0px #ffffff) blur(5px);
+  }
+}
+
+.f-modal-content {
+  animation: modalFadeIn .5s ease;
+}
+
+@keyframes modalFadeIn {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes modalFadeOut {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.pulse-gold {
+  animation: pulseGold 2s infinite;
+}
+
+@keyframes pulseGold {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(252, 220, 89, 0.7);
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 15px 10px rgba(252, 220, 89, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(252, 220, 89, 0);
+  }
+}

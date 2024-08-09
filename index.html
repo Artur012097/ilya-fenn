@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no"
+    />
+    <meta name="title" content="Fennec game" />
+    <meta name="description" content="Try your best skills to get coins" />
+    <meta name="og:title" content="Fennec game" />
+    <meta name="og:description" content="Try your best skills to get coins" />
+    <meta
+      name="og:image"
+      content="https://rate.club/images/social-sharing/sharing-logo-square.png"
+    />
+    <meta name="og:image:width" content="300" />
+    <meta name="og:image:height" content="300" />
+    <meta name="og:image:type" content="image/png" />
+    <meta name="og:image:alt" content="Feed fennec" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@TheRateClub" />
+    <meta name="twitter:title" content="Fennec game" />
+    <meta
+      name="twitter:description"
+      content="Try your best skills to get coins"
+    />
+    <meta
+      name="twitter:image"
+      content="https://rate.club/images/social-sharing/sharing-logo-square.png"
+    />
+    <meta name="twitter:image:width" content="300" />
+    <meta name="twitter:image:height" content="300" />
+    <title>Feed the fennec</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="shortcut icon" href="/favicon.png" />
+    <link rel="stylesheet" href="/css/main.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          borderRadius: {
+            none: "0",
+            xs: "4px",
+            sm: "8px",
+            md: "16px",
+            lg: "24px",
+            full: "100%",
+          },
+          fontSize: {
+            xs: ["13px", "18px"],
+            sm: ["15px", "22px"],
+            md: ["16px", "26px"],
+            lg: ["18px", "28px"],
+            xl: ["20px", "30px"],
+            11: ["11px", "14px"],
+            12: ["12px", "14.5px"],
+            14: ["14px", "24px"],
+            18: ["18px", "30px"],
+            24: ["24px", "34px"],
+            32: ["32px", "44px"],
+            36: ["36px", "48px"],
+            40: ["40px", "56px"],
+          },
+          colors: {
+            transparent: "transparent",
+            black: {
+              100: "#1A1A1A",
+              80: "#111827",
+              60: "#4B5563",
+              40: "#6B7280",
+              20: "#9CA3AF",
+            },
+            gray: {
+              100: "#A7A7A7",
+              80: "#5B5B5B",
+            },
+            red: {
+              100: "#E60014",
+            },
+            white: {
+              100: "#FEFEFE",
+              90: "#FDFDFE",
+              80: "#F9FAFB",
+              60: "#F8F9FE",
+              40: "#E5E7EB",
+              20: "#C9CBDF",
+            },
+            blue: {
+              100: "#003EA6",
+              80: "#385FEA",
+              60: "#CED7FA",
+              40: "#DFECFF",
+              30: "#2B49B3",
+              20: "#D0E3F4",
+              10: "#EAEEF9",
+              twitter: "#1DA1F2",
+            },
+          },
+          spacing: {
+            0: "0",
+            1: "1px",
+            2: "2px",
+            5: "5px",
+            4: "4px",
+            8: "8px",
+            10: "10px",
+            15: "15px",
+            16: "16px",
+            18: "18px",
+            20: "20px",
+            24: "24px",
+            30: "30px",
+            40: "40px",
+            46: "46px",
+            48: "48px",
+            52: "52px",
+            56: "56px",
+          },
+          extend: {
+            screens: {
+              xs: { max: "500px" }, // less than 500px
+              mdmf: { min: "500px" }, // more than 500px
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body>
+    <!--game main wrapper-->
+    <div
+      class="f-wrapper w-screen h-screen flex justify-center items-center relative overflow-hidden bg-black-100 bg-no-repeat bg-center bg-cover after:content-[''] after:w-full after:h-full after:absolute after:top-0 after:left-0 after:bg-[#000F29] after:bg-opacity-10"
+    >
+      <div class="f-game w-full h-full z-[1]" id="wrapper"></div>
+    </div>
+
+    <script src="/script/howler.js"></script>
+    <script type="module" src="/script/main.js"></script>
+  </body>
+</html>
