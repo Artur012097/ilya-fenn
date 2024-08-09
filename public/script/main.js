@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       tg.platform.toLowerCase() !== "ios" &&
       tg.platform.toLowerCase() !== "android"
     ) {
-      document.querySelector(".f-wrapper")?.classList?.add?.("xs:bg-[7%_80%]");
+      document.querySelector(".wrapper")?.classList?.add?.("xs:bg-[7%_80%]");
     }
     tg.ready();
 

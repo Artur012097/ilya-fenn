@@ -1,5 +1,5 @@
 const createSpinner = () => {
-  const wrapper = document.querySelector(".f-wrapper");
+  const wrapper = document.querySelector(".wrapper");
   const spinner = `<div class="f-spinner hidden">
 	<svg
 	  class="svg"

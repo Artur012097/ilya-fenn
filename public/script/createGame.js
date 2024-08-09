@@ -10,10 +10,6 @@ import CreateGameAudio from "./audio.js";
 const createGame = () => {
   // sound effects
   const swapAudio = new CreateGameAudio("/game/sound/swap.mp3");
-  const bonusAudio = new CreateGameAudio("/game/sound/bonus.mp3");
-  const bonusCollectAudio = new CreateGameAudio(
-    "/game/sound/bonus_collect.mp3",
-  );
   const collectAudio = new CreateGameAudio("/game/sound/collect.mp3");
 
   swapAudio.setVolume(0.4);
@@ -22,9 +18,6 @@ const createGame = () => {
   const token = localStorage.getItem("f_token");
   const profile = JSON.parse(localStorage.getItem("f_profile"));
   let gameData = JSON.parse(localStorage.getItem("f_game_data"));
-
-  // user scored value
-  let score = 0;
   // block, that user started to move
   let firstTargetEvent = null;
 
@@ -34,7 +27,7 @@ const createGame = () => {
     colsCount: 6,
 
     gameWrapperBg: "#000000",
-    gameHeaderBg: "rgba(26, 26, 26, .5)",
+    gameHeaderBg: "rgba(26, 26, 26, .8)",
 
     borderRadiusXs: 4,
     borderRadiusSm: 8,
@@ -44,11 +37,11 @@ const createGame = () => {
     blockIdPrefix: "block",
     blockBg: "#1A1A1A",
     blockIcons: [
-      "/game/icons/drink.png",
-      "/game/icons/donut.png",
-      "/game/icons/fries.png",
-      "/game/icons/pizza.png",
-      "/game/icons/broccoli.png",
+      "/game/icons/cherry.png",
+      "/game/icons/blueberry.png",
+      "/game/icons/banana.png",
+      "/game/icons/kiwi.png",
+      "/game/icons/strawberry.png",
     ],
 
     gameState: "",
@@ -57,6 +50,7 @@ const createGame = () => {
     movingItems: 0,
     checking: false,
     targets: [],
+    heartsCount: 6
   };
   // player game information
   const player = {
@@ -83,8 +77,8 @@ const createGame = () => {
     container: document.createElement("div"),
     gWrapper: document.createElement("div"),
     header: document.createElement("div"),
+    footer: document.createElement("div"),
     timer: document.createElement("div"),
-    score: document.createElement("div"),
     targets: document.createElement("div"),
     blocks: [],
   };
@@ -104,20 +98,21 @@ const createGame = () => {
   };
   // Create game page
   const createGamePage = () => {
-    components.container.classList.add("f-game-container");
+    components.container.classList.add("game-container");
     components.container.style.height = "100vh";
     components.container.style.overflow = "hidden";
     components.container.style.display = "flex";
     components.container.style.flexDirection = "column";
     components.container.style.alignItems = "center";
-    components.container.style.justifyContent = "center";
+    components.container.style.justifyContent = "start";
+    components.container.style.paddingTop = "10px";
 
     components.wrapper.append(components.container);
   };
 
   // Create game wrapper
   const createGameWrapper = () => {
-    components.gWrapper.classList.add("f-game-wrapper");
+    components.gWrapper.classList.add("game-wrapper");
     components.gWrapper.style.width = `${config.blockSize * config.rowsCount}px`;
     components.gWrapper.style.height = `${config.blockSize * config.colsCount}px`;
     components.gWrapper.style.position = "relative";
@@ -208,26 +203,13 @@ const createGame = () => {
     components.header.style.fontSize = "16px";
     components.header.style.color = "#ffffff";
 
-    components.header.classList.add("f-game-header");
-    components.score.classList.add("score");
+    components.header.classList.add("game-header");
+    
     components.timer.classList.add("timer");
     components.targets.setAttribute("class", "targets w-full px-16 mt-10");
     components.container.append(components.header);
 
     updateGameHeader();
-  };
-
-  // Create game score
-  const createGameScore = () => {
-    components.score.innerHTML = `Score: ${score}`;
-
-    components.score.style.display = "flex";
-    components.score.style.alignItems = "center";
-    components.score.style.fontsize = window.innerWidth < 640 ? "5vw" : "24px";
-    components.score.style.fontWeight = "600";
-    components.score.style.marginBottom =
-      window.innerWidth < 640 ? "2vw" : "8px";
-    components.header.append(components.score);
   };
 
   // Create game timer
@@ -255,8 +237,8 @@ const createGame = () => {
 
     const tHeader = `
         <div class="grid grid-cols-4 pb-8">
-          <span class="col-span-3 f-semi text-gray-100" style="font-size: ${window.innerWidth < 640 ? "3.7vw" : "16px"}">Target</span>
-          <span class="f-semi text-gray-100" style="font-size: ${window.innerWidth < 640 ? "3.7vw" : "16px"}">Reward</span>
+          <span class="col-span-3 f-semi text-gray-100 text-[16px]">Цель</span>
+          <span class="f-semi text-gray-100 text-[16px]">Награда</span>
       </div>
     `;
     components.targets.innerHTML += tHeader;
@@ -275,8 +257,8 @@ const createGame = () => {
         for (const [key, value] of Object.entries(config.targets[i])) {
           const target = `
             <div class="flex items-end">
-                <img src="${config.blockIcons[key]}" alt="Target" style="width: ${window.innerWidth < 640 ? "7vw" : "32px"}" width="32" height="32">
-                <span class="f-semi" style="font-size: ${window.innerWidth < 640 ? "3.7vw" : "16px"}">${value}</span>
+                <img src="${config.blockIcons[key]}" alt="Target" width="32" height="32">
+                <span class="f-semi text-[16px]">${value}</span>
             </div> 
           `;
           tRow.innerHTML += target;
@@ -286,9 +268,9 @@ const createGame = () => {
         const rewardHtml = `
           <div class="flex items-center">
                 <div class="flex items-center">
-                    <img src="/game/icons/coin_icon.svg" alt="Coin" style="width: ${window.innerWidth < 640 ? "7vw" : "32px"}" width="32" height="32">
-                    <span class="f-semi ml-2" style="font-size: ${window.innerWidth < 640 ? "4.2vw" : "16px"}">
-                      ${+i === config.targets?.length - 1 ? "x2" : coin.coinsCollected}
+                    <img src="/game/icons/heart.svg" alt="heart" width="22" height="22">
+                    <span class="f-semi ml-2 text-[16px]">
+                      ${config.heartsCount}
                     </span>
                 </div>
                 ${checkTargetsCollect(i) ? '<img src="/game/icons/done.svg" alt="Done"  width="32" height="32" class="w-16 h-16 ml-16">' : '<div class="w-16 h-16 ml-16"></div>'}
@@ -304,9 +286,32 @@ const createGame = () => {
     }
   };
 
+  // Create game footer
+  const createGameFooter = () => {
+    components.footer.style.width = "88vw";
+    components.footer.style.position = "relative";
+    components.footer.style.display = "flex";
+    components.footer.style.flexDirection = "column";
+    components.footer.style.justifyContent = "center";
+    components.footer.style.alignItems = "center";
+    components.footer.style.padding = "10px 0";
+    components.footer.style.marginTop = "20px";
+    components.footer.style.backgroundColor = config.gameHeaderBg;
+    components.footer.style.borderRadius = `${config.borderRadiusSm}px`;
+
+    components.footer.style.fontFamily = "sans-serif";
+    components.footer.style.fontSize = "16px";
+    components.footer.style.color = "#ffffff";
+
+    components.footer.innerText = "Banner";
+
+    components.footer.classList.add("game-footer");
+    
+    components.container.append(components.footer);
+  };
+
   // Обновить очки на странице
   const updateGameHeader = () => {
-    createGameScore();
     createGameTimer();
     createGameTargets();
   };
@@ -370,56 +375,6 @@ const createGame = () => {
     return streak > 1;
   };
 
-  // Add bonus block
-  const addBonusCoin = () => {
-    if (
-      !coin.coinGenerated &&
-      coin.cnt > 0 &&
-      Boolean(document.querySelector(".f-game"))
-    ) {
-      // get random row
-      const row = getRandomRow();
-      // get random column
-      const col = getRandomColumn();
-      // get element, that placed on that coordinats
-      const el = document.querySelector(
-        `#${config.blockIdPrefix}_${row}_${col}`,
-      );
-      // remove the element
-      el.remove();
-      // create new element and push it to the prev element place
-      createBlock(
-        row * config.blockSize,
-        col * config.blockSize,
-        row,
-        col,
-        null,
-        "bonus-block",
-      );
-      // add value for block
-      components.blocks[row][col] = 7;
-      // change state, that coin is already generated
-      coin.coinGenerated = true;
-
-      const canSoundPlay = JSON.parse(localStorage.getItem("f_sound_switch"));
-      canSoundPlay && bonusAudio.play();
-      vibrate({
-        style: 'heavy'
-      })
-
-      // add gold bgf generating when coin is generating
-      document
-        .querySelector(".f-game-container")
-        ?.classList?.add?.("generate-bonus");
-      // remove gold bg after coin generating animation end (duration 700md, set in main.css file)
-      setTimeout(() => {
-        document
-          .querySelector(".f-game-container")
-          ?.classList?.remove?.("generate-bonus");
-      }, 700);
-    }
-  };
-
   // Generate random targets
   const generateTargets = ({
     minValue = 10,
@@ -447,66 +402,6 @@ const createGame = () => {
     }
     config.targets.push(targets);
   };
-
-  // Score increment function
-  const scoreIncrement = (count) => {
-    // if coincidences count mote than 4 (equal 5 or more blocks in line),
-    // add 15 points
-    // for > 3 (equal 4 blocks in line)
-    // add 10 points
-    // fos > 2 (equal default 3 blocks in line)
-    // add 5 points
-    if (count >= 4) {
-      score += 15;
-    } else if (count >= 3) {
-      score += 10;
-    } else {
-      score += 5;
-    }
-    updateGameHeader();
-  };
-
-  const generateCoinsInterval = () => {
-    const interval = coin.cnt > 0 ? Math.floor(timer.time / coin.cnt) : 0;
-    for (let i = 0; i < coin.cnt; i++) {
-      // get timeout in milliseconds
-      const timeout = (+i + 1) * interval;
-      coin.timeouts.push(
-        setTimeout(
-          () => {
-            addBonusCoin();
-          },
-          //   if the timeout is equal game end time - 5 seconds, set timeout - 10 seconds
-          //   else set timeout
-          timeout >= timer.time - 5 ? (timeout - 5) * 1000 : timeout * 1000,
-        ),
-      );
-    }
-  };
-
-  // Get random row
-  const getRandomRow = () => {
-    return Math.floor(Math.random() * config.rowsCount);
-  };
-
-  // Get random column
-  const getRandomColumn = () => {
-    return Math.floor(Math.random() * config.colsCount);
-  };
-
-  // Collect bonus by clicking
-  const handleBonusCollect = (block) => {
-    const row = parseInt(block.getAttribute('id').split('_')[1]);
-    const col = parseInt(block.getAttribute('id').split('_')[2]);
-
-    config.movingItems++
-    player.selectedRow = row
-    player.selectedCol = col
-    player.posX = config.rowsCount - 1
-    player.posY = config.colsCount - 1
-    config.gameState = config.gameStates[1];
-    checkMoving()
-  }
 
   // Swipe start action
   const handleSwipeStart = (event) => {
@@ -542,11 +437,6 @@ const createGame = () => {
     // Calculate the swipe distance horizontally and vertically
     const deltaX = player.endX - player.startX;
     const deltaY = player.endY - player.startY;
-
-    // collect bonus if user click on bonus block
-    if (deltaX === 0 && deltaY === 0 && firstTargetEvent?.target?.classList?.contains('bonus-block')) {
-      return handleBonusCollect(event.target)
-    }
 
     // Determine the swipe direction
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
@@ -884,27 +774,13 @@ const createGame = () => {
     }
 
     const canSoundPlay = JSON.parse(localStorage.getItem("f_sound_switch"));
-    // stop swap sound
-    canSoundPlay && swapAudio.stop();
 
-    // play collect sound
-    if (components.blocks[row][col] === 7) {
-      canSoundPlay && bonusCollectAudio.play();
-      // vibrate device
-      vibrate({
-        duration: 50,
-        style: 'heavy'
-      })
-    } else {
-      canSoundPlay && collectAudio.stop();
-      canSoundPlay && collectAudio.play();
-      // vibrate device
-      vibrate({
-        duration: 50,
-      });
-    }
-    // increment score
-    scoreIncrement(removedBlocksCount);
+    canSoundPlay && collectAudio.stop();
+    canSoundPlay && collectAudio.play();
+    // vibrate device
+    vibrate({
+      duration: 50,
+    });
     // mark elements to delete
     components.blocks[row][col] = -1;
   };
@@ -994,7 +870,6 @@ const createGame = () => {
       components.gWrapper.removeEventListener("touchstart", handleSwipeStart);
       components.gWrapper.removeEventListener("mouseup", handleSwipeEnd);
       components.gWrapper.removeEventListener("touchend", handleSwipeEnd);
-      // check game targets, if there are not collected, game score will bie 0
       clearTimer();
       await setRoundResults();
     }
@@ -1020,37 +895,7 @@ const createGame = () => {
   // Start round
   const startRound = async () => {
     try {
-      const game = await fetch(
-        `${api}/api/games/5d1afcb3/start_round/?referer=${profile?.ref_code ?? null}`,
-        {
-          headers: {
-            Authorization: token,
-            "Content-Type": "application/json",
-          },
-        },
-      )
-        .then(async (res) => await res.json())
-        .catch((e) => {
-          window?.Telegram?.WebApp?.showAlert?.(
-            JSON.stringify(e?.details ?? "Error :("),
-          );
-          throw new Error(e);
-        });
-      if (game?.id) {
-        // reset game data to local storage
-        localStorage.removeItem("f_game_data");
-        localStorage.setItem("f_game_data", JSON.stringify(game));
-        gameData = game;
-        coin.cnt = game?.coins;
-
-        document.querySelector(".f-game").innerHTML = "";
-        initGame();
-        return Boolean(game?.id);
-      } else {
-        window?.Telegram?.WebApp?.showAlert?.(
-          JSON.stringify(game?.details ?? "Error :("),
-        );
-      }
+      initGame
     } catch (e) {
       console.error(e);
       window?.Telegram?.WebApp?.showAlert?.(
@@ -1063,54 +908,13 @@ const createGame = () => {
   // Save game results
   const setRoundResults = async () => {
     try {
-      const payload = {
-        id: gameData?.id,
-        exp: score,
-        mined_coins:
-          !checkTargetsCollect(0) &&
-            !checkTargetsCollect(config.targets.length - 1)
-            ? 0
-            : coin.coinsCollected > coin.cnt
-              ? coin.cnt
-              : coin.coinsCollected,
-        extra_target: checkTargetsCollect(config.targets.length - 1),
-      };
-      const saved = await fetch(`${api}/api/games/5d1afcb3/set_result/`, {
-        headers: {
-          Authorization: token,
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-        body: JSON.stringify(payload),
-      })
-        .then(async (res) => await res.json())
-        .catch((e) => {
-          window?.Telegram?.WebApp?.showAlert?.(
-            JSON.stringify(e?.details ?? "Error :("),
-          );
-          throw new Error(e);
-        });
-
-      // clear wrapper
-      if (saved?.status?.toLowerCase() === "error") {
-        window?.Telegram?.WebApp?.showAlert?.(
-          JSON.stringify(saved?.details ?? "Error :("),
-        );
-      } else {
-        // remove game data from local storage
-        localStorage.removeItem("f_game_data");
-        createGameComplete({
-          selector: ".f-game-wrapper",
-          coinsCollected: coin.coinsCollected,
-          roundId: gameData.id,
-          targetsCollected: checkTargetsCollect(0),
-          extraTargetsCollected: checkTargetsCollect(config.targets.length - 1),
-        }).then((res) => {
-          if (res === "back") backToIntro();
-          else if (res === "repeat") repeatGame();
-        });
-        return saved?.status?.toLowerCase() === "success";
-      }
+      createGameComplete({
+        selector: ".game-wrapper",
+        targets: checkTargetsCollect(),
+      }).then((res) => {
+        if (res === "back") backToIntro();
+        else if (res === "repeat") repeatGame();
+      });
     } catch (e) {
       console.error(e);
       window?.Telegram?.WebApp?.showAlert?.(
@@ -1139,7 +943,6 @@ const createGame = () => {
     }
     timer.interval = null;
     timer.time = 120;
-    score = 0;
     firstTargetEvent = null;
   };
 
@@ -1153,7 +956,6 @@ const createGame = () => {
     components.gWrapper = document.createElement("div");
     components.header = document.createElement("div");
     components.timer = document.createElement("div");
-    components.score = document.createElement("div");
     components.targets = document.createElement("div");
     components.blocks = [];
   };
@@ -1162,8 +964,8 @@ const createGame = () => {
     coin.cnt = 0;
     clearData();
     clearGameComponents();
-    await startRound();
-    generateCoinsInterval();
+    // await startRound();
+    initGame()
   };
 
   const backToIntro = async () => {
@@ -1178,33 +980,30 @@ const createGame = () => {
     clearTimer();
     // clear all data
     clearData();
+    // clear components
+    clearGameComponents()
     // disable scroll
     document.body.style.overflow = "hidden";
     // generate game targets
     generateTargets();
-    // generate extra targets
-    generateTargets({
-      minValue: 15,
-      maxValue: 30,
-    });
     // create the game container
     createGamePage();
     // create the game header
     createGameHeader();
     // create the game wrapper
     createGameWrapper();
+    // create the game footer
+    createGameFooter()
     // create the game grid (2-dimensional array)
     createGameGrid();
     // create back button
-    createBackButton(document?.querySelector?.(".f-game-header") ?? null);
+    createBackButton(document?.querySelector?.(".game-header") ?? null);
     // create sound switch button
     createSoundSwitchButton(
-      document?.querySelector?.(".f-game-header") ?? null,
+      document?.querySelector?.(".game-header") ?? null,
     );
     // start game timer
     startTimer();
-    // generate intervals to add bonus coins
-    generateCoinsInterval();
     // switch the game state to "selection"
     config.gameState = config.gameStates[0];
   };
