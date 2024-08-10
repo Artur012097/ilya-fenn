@@ -6,7 +6,7 @@ import CreateGameAudio from "./audio.js";
 const createBackButton = (element) => {
   const clickAudio = new CreateGameAudio("/game/sound/click.mp3");
   const button = `
-	<button id="gameBack" class="absolute top-[20px] left-[20px] z-[2]">
+	<button id="gameBack" class="absolute top-[20px] left-[20px] z-[9]">
 		<img src="/game/icons/back-arrow.svg" alt="Back" />
 	</button>`;
 

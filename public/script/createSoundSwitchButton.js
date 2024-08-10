@@ -3,7 +3,7 @@ import { vibrate } from "./vibrate.js";
 
 export const createSoundSwitchButton = (element) => {
   const button = `
-		<button id="soundSwitch" class="w-[24px] h-[24px] absolute top-[20px] right-[20px] z-[2]" aria-label="Sound switch">
+		<button id="soundSwitch" class="w-[24px] h-[24px] absolute top-[20px] right-[20px] z-[9]" aria-label="Sound switch">
 			<img src="/game/icons/sound_on.svg" width="24" height="24" alt="Sound switch" />
 		</button>
 	`;
