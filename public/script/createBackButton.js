@@ -14,6 +14,7 @@ const createBackButton = (element) => {
     document.querySelector("#gameBack").remove();
   }
   const wrapper = element ?? document.querySelector("#wrapper");
+  
   wrapper.insertAdjacentHTML("afterbegin", button);
 
   document.querySelector("#gameBack").addEventListener("click", () => {

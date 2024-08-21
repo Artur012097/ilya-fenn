@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   //   "f_token",
   //   "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIxMTMzOTI1LCJpYXQiOjE3MTk4Mzc5MjUsImp0aSI6ImM2ZWU2MTZlOTcxMzQ4MTdiNmEwMjZmMmM3MjAyYzRhIiwidXNlcl9pZCI6MTZ9.ay1NZwySVDApYM2zZwiBA4v8l895Edt-BvXEjxrXGv0",
   // );
-  return await createIntro();
+  // return await createIntro();
   if (tg) {
     if (
       tg.platform.toLowerCase() === "ios" ||
@@ -98,26 +98,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // user register
     try {
-      fetch(`${api}/api/auth/telegram/authorize/`, {
-        method: "POST",
+      fetch('https://api.liteplay.online/a/user/init', {
         headers: {
-          accept: "application/json",
-          "Content-Type": "application/json",
+          // Authorization: `tma ${JSON.stringity(body)}`
+          Authorization: 'tma query_id=AAE7mqcFAAAAADuapwWNNt-M&user=%7B%22id%22%3A94870075%2C%22first_name%22%3A%22Igor%22%2C%22last_name%22%3A%22Lepilin%22%2C%22username%22%3A%22ilepilin%22%2C%22language_code%22%3A%22ru%22%2C%22is_premium%22%3Atrue%2C%22allows_write_to_pm%22%3Atrue%7D&auth_date=1723553958&hash=614745a543d9560fdb5b7dcea02026a9db54be69be4435333f0e4d6a385d2af6'
         },
-        credentials: "same-origin",
-        body: JSON.stringify(body),
       })
         .then(async (res) => {
           const response = await res.json();
-          const { access } = await response;
+          const { user } = await response;
 
-          if (access) {
+          if (user) {
             // set claim popup show value for first time
-            localStorage.setItem("f_game_show_claim_popup", true);
-            localStorage.removeItem("f_token");
-            localStorage.removeItem("f_api");
-            localStorage.setItem("f_api", api);
-            localStorage.setItem("f_token", `Bearer ${access}`);
+            localStorage.setItem("g_session_id", user.session_id);
+            // localStorage.setItem("f_token", JSON.stringify(body));
+            localStorage.setItem("g_token", 'tma query_id=AAE7mqcFAAAAADuapwWNNt-M&user=%7B%22id%22%3A94870075%2C%22first_name%22%3A%22Igor%22%2C%22last_name%22%3A%22Lepilin%22%2C%22username%22%3A%22ilepilin%22%2C%22language_code%22%3A%22ru%22%2C%22is_premium%22%3Atrue%2C%22allows_write_to_pm%22%3Atrue%7D&auth_date=1723553958&hash=614745a543d9560fdb5b7dcea02026a9db54be69be4435333f0e4d6a385d2af6');
             // create game intro page
             await createIntro();
           } else {

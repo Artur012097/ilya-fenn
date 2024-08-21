@@ -7,17 +7,18 @@ import { vibrate } from "./vibrate.js";
 import { calculateSize } from "./utils.js";
 import CreateGameAudio from "./audio.js";
 
-const createGame = () => {
+const createGame = async () => {
   // sound effects
   const swapAudio = new CreateGameAudio("/game/sound/swap.mp3");
   const collectAudio = new CreateGameAudio("/game/sound/collect.mp3");
+  const bonusAudio = new CreateGameAudio("/game/sound/bonus.mp3");
+  const bonusCollectAudio = new CreateGameAudio(
+    "/game/sound/bonus_collect.mp3",
+  );
 
   swapAudio.setVolume(0.4);
 
-  const api = localStorage.getItem("f_api");
-  const token = localStorage.getItem("f_token");
-  const profile = JSON.parse(localStorage.getItem("f_profile"));
-  let gameData = JSON.parse(localStorage.getItem("f_game_data"));
+  const token = localStorage.getItem('g_token')
   // block, that user started to move
   let firstTargetEvent = null;
 
@@ -36,21 +37,21 @@ const createGame = () => {
     blockClass: "food-block",
     blockIdPrefix: "block",
     blockBg: "#1A1A1A",
-    blockIcons: [
-      "/game/icons/cherry.png",
-      "/game/icons/blueberry.png",
-      "/game/icons/banana.png",
-      "/game/icons/kiwi.png",
-      "/game/icons/strawberry.png",
-    ],
+    blockIcons: {
+     cherry:  "/game/icons/cherry.png",
+      kiwi: "/game/icons/kiwi.png",
+      banana: "/game/icons/banana.png",
+      apple: "/game/icons/apple.png",
+      strawberry: "/game/icons/strawberry.png",
+    },
 
     gameState: "",
     gameStates: ["pick", "switch", "revert", "remove", "refill"],
 
     movingItems: 0,
     checking: false,
-    targets: [],
-    heartsCount: 6
+    targetsData: {},
+    targets: {},
   };
   // player game information
   const player = {
@@ -63,14 +64,6 @@ const createGame = () => {
     endX: 0,
     endY: 0,
   };
-  // coin information
-  const coin = {
-    coinGenerated: false,
-    coinsCollected: 0,
-    collected: false,
-    cnt: gameData?.coins,
-    timeouts: [],
-  };
   // game components
   const components = {
     wrapper: document.querySelector("#wrapper"),
@@ -82,11 +75,21 @@ const createGame = () => {
     targets: document.createElement("div"),
     blocks: [],
   };
+  // game data
+  const bonus = {
+    limit: 0,
+    bonusesCollected: 0,
+    collected: false,
+    bonusGenerated: false,
+    timeouts: []
+  }
   // game timer
   const timer = {
     interval: null,
     time: 120,
   };
+  // game data
+  let gameData = null
 
   const timeFormatter = (seconds) => {
     if (typeof seconds === "number") {
@@ -96,6 +99,40 @@ const createGame = () => {
       return `${m < 10 ? `0${m}` : m}:${s < 10 ? `0${s}` : s}`;
     }
   };
+
+  const startRound = async () => {
+    try {
+      await fetch('https://api.liteplay.online/a/game/start', {
+        headers: {
+          Authorization: token
+        },
+      })
+      .then(res => res.json())
+      .then((res = {}) => {
+        if (res.data) {
+          // clear timer
+          clearTimer();
+          // clear all data
+          clearData();
+
+          timer.time = res?.data?.duration ?? 0
+          bonus.limit = res?.data?.limit ?? 0
+          config.targetsData = {...res?.data?.goal}
+          config.targets = {...res?.data?.goal}
+          gameData = {...res?.data}
+          
+          initGame()
+        }
+      })
+    } catch (e) {
+      console.error(e);
+      window?.Telegram?.WebApp?.showAlert?.(
+        JSON.stringify(e?.details ?? "Error :("),
+      );
+      throw new Error(e);
+    }
+  }
+
   // Create game page
   const createGamePage = () => {
     components.container.classList.add("game-container");
@@ -171,8 +208,8 @@ const createGame = () => {
       for (let j = 0; j < config.colsCount; j++) {
         do {
           components.blocks[i][j] = Math.floor(
-            Math.random() * config.blockIcons.length,
-          );
+            Math.random() * Object.keys(config.blockIcons).length,
+          )
         } while (isStreak(i, j));
 
         createBlock(
@@ -180,7 +217,7 @@ const createGame = () => {
           j * config.blockSize,
           i,
           j,
-          config.blockIcons[components.blocks[i][j]],
+          Object.values(config.blockIcons)[components.blocks[i][j]],
         );
       }
     }
@@ -243,46 +280,44 @@ const createGame = () => {
     `;
     components.targets.innerHTML += tHeader;
 
-    for (const i in config.targets) {
-      const row = document.createElement("div");
-      row.setAttribute(
-        "class",
-        `grid grid-cols-4 justify-between items-center border-t-[1px] border-gray-80 py-8 ${config.targets[i - 1] && !checkTargetsCollect(i - 1) ? "opacity-50" : ""}`,
-      );
+    const row = document.createElement("div");
+    row.setAttribute(
+      "class",
+      'grid grid-cols-4 justify-between items-center border-t-[1px] border-gray-80 py-8',
+    );
 
-      const tRow = document.createElement("div");
-      tRow.setAttribute("class", "flex gap-8 col-span-3");
+    const tRow = document.createElement("div");
+    tRow.setAttribute("class", "flex gap-8 col-span-3");
 
-      {
-        for (const [key, value] of Object.entries(config.targets[i])) {
-          const target = `
-            <div class="flex items-end">
-                <img src="${config.blockIcons[key]}" alt="Target" width="32" height="32">
-                <span class="f-semi text-[16px]">${value}</span>
-            </div> 
-          `;
-          tRow.innerHTML += target;
-        }
-
-        const rewRow = document.createElement("div");
-        const rewardHtml = `
-          <div class="flex items-center">
-                <div class="flex items-center">
-                    <img src="/game/icons/heart.svg" alt="heart" width="22" height="22">
-                    <span class="f-semi ml-2 text-[16px]">
-                      ${config.heartsCount}
-                    </span>
-                </div>
-                ${checkTargetsCollect(i) ? '<img src="/game/icons/done.svg" alt="Done"  width="32" height="32" class="w-16 h-16 ml-16">' : '<div class="w-16 h-16 ml-16"></div>'}
-            </div>
+    {
+      for (const [key, value] of Object.entries(config.targets)) {
+        const target = `
+          <div class="flex items-end">
+              <img src="${config.blockIcons[key]}" alt="Target" width="32" height="32">
+              <span class="f-semi text-[16px]">${value}</span>
+          </div> 
         `;
-        rewRow.innerHTML += rewardHtml;
-
-        row.append(tRow);
-        row.append(rewRow);
-        components.targets.append(row);
-        components.header.append(components.targets);
+        tRow.innerHTML += target;
       }
+
+      const rewRow = document.createElement("div");
+      const rewardHtml = `
+        <div class="flex items-center">
+              <div class="flex items-center">
+                  <img src="/game/icons/heart.png" alt="heart" width="22" height="22">
+                  <span class="f-semi ml-2 text-[16px]">
+                    ${bonus.bonusesCollected}
+                  </span>
+              </div>
+              ${checkTargetsCollect() ? '<img src="/game/icons/done.svg" alt="Done"  width="32" height="32" class="w-16 h-16 ml-16">' : '<div class="w-16 h-16 ml-16"></div>'}
+          </div>
+      `;
+      rewRow.innerHTML += rewardHtml;
+
+      row.append(tRow);
+      row.append(rewRow);
+      components.targets.append(row);
+      components.header.append(components.targets);
     }
   };
 
@@ -375,33 +410,98 @@ const createGame = () => {
     return streak > 1;
   };
 
-  // Generate random targets
-  const generateTargets = ({
-    minValue = 10,
-    maxValue = 15,
-    targetsCount = 3,
-  } = {}) => {
-    const targets = {};
-    const chosenIndexes = [];
+   // Add bonus block
+  const addBonus = () => {
+    if (
+      !bonus.bonusGenerated &&
+      bonus.limit > 0 &&
+      Boolean(document.querySelector(".game"))
+    ) {
+      // get random row
+      const row = getRandomRow();
+      // get random column
+      const col = getRandomColumn();
+      // get element, that placed on that coordinats
+      const el = document.querySelector(
+        `#${config.blockIdPrefix}_${row}_${col}`,
+      );
+      // remove the element
+      el.remove();
+      // create new element and push it to the prev element place
+      createBlock(
+        row * config.blockSize,
+        col * config.blockSize,
+        row,
+        col,
+        null,
+        "bonus-block",
+      );
+      // add value for block
+      components.blocks[row][col] = 7;
+      // change state, that bonus is already generated
+      bonus.bonusGenerated = true;
 
-    while (targetsCount > 0) {
-      let random = Math.floor(Math.random() * config.blockIcons.length);
+      const canSoundPlay = JSON.parse(localStorage.getItem("f_sound_switch"));
+      canSoundPlay && bonusAudio.play();
+      vibrate({
+        style: 'heavy'
+      })
 
-      // check, if the random index is already in array
-      while (chosenIndexes.includes(random)) {
-        random = Math.floor(Math.random() * config.blockIcons.length);
-      }
-
-      // add index to indexes array to check dublicates
-      chosenIndexes.push(random);
-
-      // generate new target with value
-      targets[random] =
-        Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue;
-      targetsCount--;
+      // add gold bgf generating when bonus is generating
+      document
+        .querySelector(".f-game-container")
+        ?.classList?.add?.("generate-bonus");
+      // remove gold bg after bonus generating animation end (duration 700md, set in main.css file)
+      setTimeout(() => {
+        document
+          .querySelector(".f-game-container")
+          ?.classList?.remove?.("generate-bonus");
+      }, 700);
     }
-    config.targets.push(targets);
   };
+
+  const generateBonusesInterval = () => {
+    const interval = bonus.limit > 0 ? Math.floor(timer.time / bonus.limit) : 0;
+    for (let i = 0; i < bonus.limit; i++) {
+      // get timeout in milliseconds
+      const timeout = (+i + 1) * interval;
+      
+      bonus.timeouts.push(
+        setTimeout(
+          () => {
+            addBonus();
+          },
+          //   if the timeout is equal game end time - 5 seconds, set timeout - 10 seconds
+          //   else set timeout
+          timeout >= timer.time - 5 ? (timeout - 5) * 1000 : timeout * 1000,
+        ),
+      );
+    }
+  };
+
+  // Get random row
+  const getRandomRow = () => {
+    return Math.floor(Math.random() * config.rowsCount);
+  };
+
+  // Get random column
+  const getRandomColumn = () => {
+    return Math.floor(Math.random() * config.colsCount);
+  };
+
+  // Collect bonus by clicking
+  const handleBonusCollect = (block) => {
+    const row = parseInt(block.getAttribute('id').split('_')[1]);
+    const col = parseInt(block.getAttribute('id').split('_')[2]);
+
+    config.movingItems++
+    player.selectedRow = row
+    player.selectedCol = col
+    player.posX = config.rowsCount - 1
+    player.posY = config.colsCount - 1
+    config.gameState = config.gameStates[1];
+    checkMoving()
+  }
 
   // Swipe start action
   const handleSwipeStart = (event) => {
@@ -437,6 +537,11 @@ const createGame = () => {
     // Calculate the swipe distance horizontally and vertically
     const deltaX = player.endX - player.startX;
     const deltaY = player.endY - player.startY;
+
+    // collect bonus if user click on bonus block
+    if (deltaX === 0 && deltaY === 0 && firstTargetEvent?.target?.classList?.contains('bonus-block')) {
+      return handleBonusCollect(event.target)
+    }
 
     // Determine the swipe direction
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
@@ -755,32 +860,43 @@ const createGame = () => {
     }
 
     if (components.blocks[row][col] === 7) {
-      coin.coinsCollected++;
-      coin.coinGenerated = false;
+      bonus.bonusesCollected++;
+      bonus.bonusGenerated = false;
     }
 
-    for (const i in config.targets) {
-      if (!checkTargetsCollect(i)) {
-        if (
-          config.targets[i][blockValue] !== undefined &&
-          config.targets[i][blockValue] > 0
-        ) {
-          config.targets[i][blockValue] - (removedBlocksCount + 1) <= 0
-            ? (config.targets[i][blockValue] = 0)
-            : (config.targets[i][blockValue] -= removedBlocksCount + 1);
-        }
-        break;
-      }
+    const key = Object.keys(config.blockIcons)[blockValue]
+    
+    if (
+      config.targets[key] !== undefined &&
+      config.targets[key] > 0
+    ) {
+      config.targets[key] - (removedBlocksCount + 1) <= 0
+        ? (config.targets[key] = 0)
+        : (config.targets[key] -= removedBlocksCount + 1);
     }
 
     const canSoundPlay = JSON.parse(localStorage.getItem("f_sound_switch"));
+    // stop swap sound
+    canSoundPlay && swapAudio.stop();
 
-    canSoundPlay && collectAudio.stop();
-    canSoundPlay && collectAudio.play();
-    // vibrate device
-    vibrate({
-      duration: 50,
-    });
+    // play collect sound
+    if (components.blocks[row][col] === 7) {
+      canSoundPlay && bonusCollectAudio.play();
+      // vibrate device
+      vibrate({
+        duration: 50,
+        style: 'heavy'
+      })
+    } else {
+      canSoundPlay && collectAudio.stop();
+      canSoundPlay && collectAudio.play();
+      // vibrate device
+      vibrate({
+        duration: 50,
+      });
+    }
+    // increment score
+    // scoreIncrement(removedBlocksCount);
     // mark elements to delete
     components.blocks[row][col] = -1;
   };
@@ -805,15 +921,14 @@ const createGame = () => {
     for (let i = 0; i < config.colsCount; i++) {
       if (components.blocks[0][i] === -1) {
         components.blocks[0][i] = Math.floor(
-          Math.random() * config.blockIcons.length,
-        );
+          Math.random() * Object.keys(config.blockIcons).length)
 
         createBlock(
           0,
           i * config.blockSize,
           0,
           i,
-          config.blockIcons[components.blocks[0][i]],
+          Object.values(config.blockIcons)[components.blocks[0][i]],
         );
         blocksPlaced++;
       }
@@ -876,8 +991,8 @@ const createGame = () => {
   };
 
   // check targets collect results
-  const checkTargetsCollect = (index = 0) =>
-    !Object.values(config.targets[index]).some((i) => +i !== 0);
+  const checkTargetsCollect = () =>
+    !Object.values(config.targets).some((i) => +i !== 0);
 
   // Start timer
   const startTimer = () => {
@@ -892,29 +1007,38 @@ const createGame = () => {
     }, 1000);
   };
 
-  // Start round
-  const startRound = async () => {
-    try {
-      initGame
-    } catch (e) {
-      console.error(e);
-      window?.Telegram?.WebApp?.showAlert?.(
-        JSON.stringify(e?.details ?? "Error :("),
-      );
-      throw new Error(e);
-    }
-  };
-
   // Save game results
   const setRoundResults = async () => {
     try {
-      createGameComplete({
-        selector: ".game-wrapper",
-        targets: checkTargetsCollect(),
-      }).then((res) => {
-        if (res === "back") backToIntro();
-        else if (res === "repeat") repeatGame();
-      });
+      const body = {
+        id: gameData?.id,
+        duration: gameData?.duration,
+        value: bonus.bonusesCollected,
+        stats: {}
+      }
+      
+      for (const key of Object.keys(config.targets)) {
+        body.stats[key] = config.targetsData[key] - config.targets[key];
+      }
+      
+      await fetch('https://api.liteplay.online/a/game/finish', {
+        method: 'POST',
+        headers: {
+          Authorization: token
+        },
+        body: JSON.stringify(body)
+      })
+      .then(res => res.json())
+      .then((res) => {
+        console.log(res);
+        // createGameComplete({
+        //   selector: ".game-wrapper",
+        //   targets: checkTargetsCollect(),
+        // }).then((res) => {
+        //   if (res === "back") backToIntro();
+        //   else if (res === "repeat") repeatGame();
+        // });
+      })
     } catch (e) {
       console.error(e);
       window?.Telegram?.WebApp?.showAlert?.(
@@ -934,13 +1058,6 @@ const createGame = () => {
     clearTimer();
     config.targets = [];
     config.checking = false;
-    coin.coinGenerated = false;
-    coin.coinsCollected = 0;
-    for (const timeout in coin.timeouts) {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-    }
     timer.interval = null;
     timer.time = 120;
     firstTargetEvent = null;
@@ -961,11 +1078,9 @@ const createGame = () => {
   };
 
   const repeatGame = async () => {
-    coin.cnt = 0;
     clearData();
     clearGameComponents();
-    // await startRound();
-    initGame()
+    await startRound();
   };
 
   const backToIntro = async () => {
@@ -976,16 +1091,10 @@ const createGame = () => {
 
   // Initialize all game components
   const initGame = () => {
-    // clear timer
-    clearTimer();
-    // clear all data
-    clearData();
     // clear components
     clearGameComponents()
     // disable scroll
     document.body.style.overflow = "hidden";
-    // generate game targets
-    generateTargets();
     // create the game container
     createGamePage();
     // create the game header
@@ -1004,15 +1113,17 @@ const createGame = () => {
     );
     // start game timer
     startTimer();
+    // generate intervals to add bonuses
+    generateBonusesInterval();
     // switch the game state to "selection"
     config.gameState = config.gameStates[0];
+    
+    document
+      .querySelector("#gameBack")
+      .addEventListener("click", () => clearData());
   };
 
-  if (profile) initGame();
-
-  document
-    .querySelector("#gameBack")
-    .addEventListener("click", () => clearData());
+  if (localStorage.getItem("g_session_id")) await startRound()
 };
 
 export { createGame };
