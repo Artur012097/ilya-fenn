@@ -18,13 +18,11 @@ const createBackButton = (element) => {
   wrapper.insertAdjacentHTML("afterbegin", button);
 
   document.querySelector("#gameBack").addEventListener("click", () => {
-    const canSoundPlay = JSON.parse(localStorage.getItem("f_sound_switch"));
+    const canSoundPlay = JSON.parse(localStorage.getItem("g_sound_switch"));
     vibrate();
     canSoundPlay && clickAudio.play();
     // clear all intervals and timeouts
     clearAllIntervalsAndTimeouts().then(() => {
-      const goldRain = document.querySelector(".gold-rain");
-      if (goldRain) goldRain.remove();
       // create game default screen
       createIntro();
     });

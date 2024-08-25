@@ -1,11 +1,11 @@
 import CreateGameAudio from "./audio.js";
-import { createVideoPlayer } from "./createVideoPlayer.js";
 import { vibrate } from "./vibrate.js";
 
 // Create game complete stage
 export const createGameComplete = ({
   selector,
   targets,
+  bonus
 } = {}) => {
   const clickAudio = new CreateGameAudio("/game/sound/click.mp3");
   const api = localStorage.getItem("f_api");
@@ -16,18 +16,21 @@ export const createGameComplete = ({
     selector.startsWith(".") ? selector : `.${selector}`,
   )
 
-  if (targets) return createVideoPlayer()
-
   const html = `
 		<div
-      class="w-full h-full flex flex-col justify-center items-center absolute z-[5] ${targets ? "!w-screen !h-screen !fixed top-0 left-0" : ""}"
+      class="w-full h-full flex flex-col justify-center items-center absolute z-[5]"
       id="completedWrapper"
     >
       <div class="w-full h-full flex flex-col justify-start items-center bg-black-100 bg-opacity rounded-[8px] p-40 id="completedContent">
-        <img src="/game/images/sad_face.png" alt="Sad" />
-        <h3 class="text-[36px] f-semi text-white-100 mt-[10px] mb-[20px]">
-          Time's up
+        ${!targets ? '<img src="/game/images/sad_face.png" alt="Sad" />' : ''}
+        <h3 class="text-[36px] f-semi mt-[10px] mb-[20px] ${targets ? 'text-[#FEDA2C]' : 'text-white-100'}">
+        ${targets ? "Congratulations" : "Target fail"}
         </h3>
+        ${targets ? `
+          <div class="w-full flex justify-center items-center mb-[30px]">
+          <img src="/game/icons/heart.png" alt="Heart" class="w-[48px] h-[48px] mr-[4px]"/>
+          <span class="text-[24px] f-semi text-white-100">${bonus}</span>
+        </div>` : ''}
           <div class="w-full flex justify-center items-center gap-[6vw]">
             <button class="w-[50px] h-[50px] rounded-sm bg-[#1E3384] flex justify-center items-center" id="repeatBtn">
               <img src="/game/icons/repeat.svg" alt="Main menu" />
@@ -51,14 +54,14 @@ export const createGameComplete = ({
   return new Promise((resolve) => {
     if (repeatBtn)
       repeatBtn.addEventListener("click", () => {
-        const canSoundPlay = JSON.parse(localStorage.getItem("f_sound_switch"));
+        const canSoundPlay = JSON.parse(localStorage.getItem("g_sound_switch"));
         vibrate();
         canSoundPlay && clickAudio.play();
         resolve("repeat");
       });
     if (backBtn)
       backBtn.addEventListener("click", () => {
-        const canSoundPlay = JSON.parse(localStorage.getItem("f_sound_switch"));
+        const canSoundPlay = JSON.parse(localStorage.getItem("g_sound_switch"));
         vibrate();
         canSoundPlay && clickAudio.play();
         resolve("back");

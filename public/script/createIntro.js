@@ -58,21 +58,27 @@ const createIntro = async () => {
 
       el.insertAdjacentHTML('afterbegin', icon);
     }
+    
+    requestAnimationFrame(() => {
+      const next = document.querySelector(`.level-item[aria-level="${scenes.indexOf(nextLockedScene) + 1}"]`)
+      
+      if (next) {
+        const rect = next.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+        
+        const top = rect.top - elRect.top
+        
+        const levelEl = `
+          <div class="h-[28px] flex items-center px-[5px] bg-blue-100 rounded-xs absolute top-[${top + 8}px] left-[70px]">
+            <img src="/game/icons/lock.svg" alt="Lock icon" class="w-[20px] h-[20px]"/>
+            <img src="/game/icons/heart.png" alt="Heart icon" class="w-[20px] h-[20px] mx-[4px]" />
+            <span class="text-[16px] f-semi text-white-100">${nextLockedScene?.cost ?? 0}</span>
+          </div>
+        `
 
-    const next = document.querySelector(`.level-item[aria-level="${scenes.indexOf(nextLockedScene) + 1}"]`)
-    const rect = next.getBoundingClientRect()
-    const top = rect.top
-    const height = rect.height
-
-    const levelEl = `
-      <div class="h-[28px] flex items-center px-[5px] bg-blue-100 rounded-xs absolute top-[${top + height}px] left-[80px]">
-        <img src="/game/icons/lock.svg" alt="Lock icon" class="w-[17px]"/>
-        <img src="/game/icons/heart.png" alt="Heart icon" class="w-[17px]" />
-        <span class="text-[16px] f-semi text-white-100">${nextLockedScene?.cost ?? 0}</span>
-      </div>
-    `
-
-    el.insertAdjacentHTML('afterbegin', levelEl);
+        el.insertAdjacentHTML('afterbegin', levelEl);
+      }
+    });
   };
 
   wrapper.innerHTML = `
@@ -96,19 +102,20 @@ const createIntro = async () => {
       const target = e.currentTarget
       const index = target.getAttribute("aria-level")
 
-      const canSoundPlay = JSON.parse(localStorage.getItem("f_sound_switch"));
-      vibrate();
-      canSoundPlay && clickAudio.play();
       
-      if (scenes[index - 1].user_unlocked) {
+      if (scenes[+index - 1].user_unlocked) {
+        const canSoundPlay = JSON.parse(localStorage.getItem("g_sound_switch"));
+        vibrate();
+        canSoundPlay && clickAudio.play();
         createVideoPlayer({
-          items: scenes
+          items: scenes,
+          index: index - 1,
         });
       }
     });
   }
   document.querySelector("#gameStartBtn").addEventListener("click", () => {
-    const canSoundPlay = JSON.parse(localStorage.getItem("f_sound_switch"));
+    const canSoundPlay = JSON.parse(localStorage.getItem("g_sound_switch"));
     vibrate();
     canSoundPlay && clickAudio.play();
     createGame();

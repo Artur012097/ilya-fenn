@@ -15,11 +15,11 @@ export const createSoundSwitchButton = (element) => {
   wrapper.insertAdjacentHTML("afterbegin", button);
 
   // set default value, if there is no value yet
-  if (localStorage.getItem("f_sound_switch") === null)
-    localStorage.setItem("f_sound_switch", true);
+  if (localStorage.getItem("g_sound_switch") === null)
+    localStorage.setItem("g_sound_switch", true);
   // change sound icon
   const setIcon = () => {
-    const soundSwitch = JSON.parse(localStorage.getItem("f_sound_switch"));
+    const soundSwitch = JSON.parse(localStorage.getItem("g_sound_switch"));
     document.querySelector("#soundSwitch img").src =
       soundSwitch || soundSwitch === undefined
         ? "/game/icons/sound_on.svg"
@@ -31,15 +31,15 @@ export const createSoundSwitchButton = (element) => {
   // add click listener on button
   document.querySelector("#soundSwitch").addEventListener("click", () => {
     vibrate()
-    const soundSwitch = JSON.parse(localStorage.getItem("f_sound_switch"));
+    const soundSwitch = JSON.parse(localStorage.getItem("g_sound_switch"));
     const clickAudio = new CreateGameAudio("/game/sound/click.mp3");
     // set new value on localStorage
     localStorage.setItem(
-      "f_sound_switch",
+      "g_sound_switch",
       JSON.stringify(soundSwitch !== undefined ? !soundSwitch : true),
     );
     // play click audio when sound set ON
-    if (JSON.parse(localStorage.getItem("f_sound_switch"))) {
+    if (JSON.parse(localStorage.getItem("g_sound_switch"))) {
       clickAudio.play();
     }
     // update sound icon

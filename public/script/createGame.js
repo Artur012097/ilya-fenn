@@ -38,10 +38,10 @@ const createGame = async () => {
     blockIdPrefix: "block",
     blockBg: "#1A1A1A",
     blockIcons: {
-     cherry:  "/game/icons/cherry.png",
-      kiwi: "/game/icons/kiwi.png",
+      cherry:  "/game/icons/cherry.png",
+      blueberry: "/game/icons/blueberry.png",
       banana: "/game/icons/banana.png",
-      apple: "/game/icons/apple.png",
+      peach: "/game/icons/peach.png",
       strawberry: "/game/icons/strawberry.png",
     },
 
@@ -441,7 +441,7 @@ const createGame = async () => {
       // change state, that bonus is already generated
       bonus.bonusGenerated = true;
 
-      const canSoundPlay = JSON.parse(localStorage.getItem("f_sound_switch"));
+      const canSoundPlay = JSON.parse(localStorage.getItem("g_sound_switch"));
       canSoundPlay && bonusAudio.play();
       vibrate({
         style: 'heavy'
@@ -613,7 +613,7 @@ const createGame = async () => {
 
   // Swap blocks
   const swapBlocks = async () => {
-    const canSoundPlay = JSON.parse(localStorage.getItem("f_sound_switch"));
+    const canSoundPlay = JSON.parse(localStorage.getItem("g_sound_switch"));
 
     vibrate();
     canSoundPlay && swapAudio.play();
@@ -875,7 +875,7 @@ const createGame = async () => {
         : (config.targets[key] -= removedBlocksCount + 1);
     }
 
-    const canSoundPlay = JSON.parse(localStorage.getItem("f_sound_switch"));
+    const canSoundPlay = JSON.parse(localStorage.getItem("g_sound_switch"));
     // stop swap sound
     canSoundPlay && swapAudio.stop();
 
@@ -1030,14 +1030,16 @@ const createGame = async () => {
       })
       .then(res => res.json())
       .then((res) => {
-        console.log(res);
-        // createGameComplete({
-        //   selector: ".game-wrapper",
-        //   targets: checkTargetsCollect(),
-        // }).then((res) => {
-        //   if (res === "back") backToIntro();
-        //   else if (res === "repeat") repeatGame();
-        // });
+        if (res.success) {
+          createGameComplete({
+            selector: ".game-wrapper",
+            bonus: res?.data?.value ?? bonus.bonusesCollected,
+            targets: res?.data?.win ?? checkTargetsCollect(),
+          }).then((res) => {
+            if (res === "back") backToIntro();
+            else if (res === "repeat") repeatGame();
+          });
+        }
       })
     } catch (e) {
       console.error(e);
